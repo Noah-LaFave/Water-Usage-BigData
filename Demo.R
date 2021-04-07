@@ -30,15 +30,14 @@ split2005 <- split(usgs2005_data, usgs2005_data$STATE)
 split2010 <- split(usgs2010_data, usgs2010_data$STATE)
 split2015 <- split(usgs2015_data, usgs2015_data$STATE)
 
-fix(usgs2015_data)
 water <- read_xlsx("C:/Users/Peter/Downloads/US-TotW-ByState.xlsx")
 water$roundNum <- round(water$State,2)
 
 usa <- getData("GADM", country="USA", level=1) 
 usa$Data <- water$roundNum
 
-pal <- colorQuantile("Reds", NULL, n = 12)
-pallette <- colorQuantile("Reds", NULL, n = 12)
+pal <- colorQuantile("Reds", NULL, n = 9)
+pallette <- colorQuantile("Reds", NULL, n = 9)
 
 
 totalUsageH <- data.frame(
@@ -46,14 +45,6 @@ totalUsageH <- data.frame(
   year = c("1990","1995", "2005", "2010", "2015")
 )
 
-
-noNA <- function(x) { x[is.na(x)] <- 0; x }
-
-
-
-split1990 <- noNA(split1990)
-
-sum(split1990$CA$`to-frtot`)
 
 
 total <- function(data, state, col){
@@ -99,7 +90,17 @@ totalUsageOR <- data.frame(
   year = c("1990","1995", "2005", "2010", "2015")
 )
 
+tot90 <-sum(usgs1990_data$`to-frtot`)
+tot95 <- sum(usgs1995_data$`TO-WFrTo`)#temp_tot00 <- sum(usgs2000_data$`TO-WFrTo`)
+tot05 <- sum(usgs2005_data$`TO-WFrTo`)
+tot00 = (tot95 + tot05) / 2
+tot10 <- sum(usgs2010_data$`TO-WFrTo`)
+total15 <- sum(usgs2015_data$`TO-WFrTo`)
 
+all <- data.frame(
+  usage = c(tot90, tot95, tot00, tot05, tot10,total15),
+  year = c("1990", "1995", "2000", "2005", "2010", "2015")
+)
 
 
 ggplot(totalUsageH, aes(x = as.numeric(year), y = usage))+
@@ -118,7 +119,7 @@ ui = fillPage(
   absolutePanel(top = 10, right = 20, 
       plotOutput(outputId = "drought", width = "150%", height = "500px"),
       selectInput("state", "Learn about a specific state:",
-                  c("California" = "cal", "Oregon" = "or", "Hawaii"=
+                  c("Total Usage" = "tot", "California" = "cal", "Oregon" = "or", "Hawaii"=
                       "ha"), width ="50%"),
       checkboxInput("legend", "Show legend", TRUE)
     )
@@ -126,6 +127,9 @@ ui = fillPage(
 data = totalUsageCAL
 server <- function(input, output, session) {
   output$drought<-renderPlot({
+    if(input$state == "tot"){
+      data = all
+    }
     if(input$state == "ha"){
       data = totalUsageH
     }
@@ -161,7 +165,7 @@ server <- function(input, output, session) {
     # enabled, create a new one.
     proxy %>% clearControls()
     if (input$legend) {
-      pal <- colorQuantile("Reds", NULL, n = 12)
+      pal <- colorQuantile("Reds", NULL, n = 9)
       proxy %>% addLegend(position = "bottomleft",
                           pal = pal, values = ~usa$Data,
                           title = "Water Usage",
@@ -170,6 +174,10 @@ server <- function(input, output, session) {
   })
 }
 shinyApp(ui, server)
+
+
+
+
 
 
 
