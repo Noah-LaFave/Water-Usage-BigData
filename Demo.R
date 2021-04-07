@@ -4,18 +4,108 @@ library(leaflet)
 library(readxl)
 library(raster)
 library(RColorBrewer)
-corona <- read_xlsx("C:/Users/Peter/Desktop/proje/coronaC.xlsx") #cases per 100k about 3 weeks ago, not total cases per 100k 
-total <- read_xlsx("C:/Users/Peter/Desktop/proje/totalCases.xlsx") #more US data
+library(readxl)
+library(shiny)
 
+#Read in the data from USGS
+usgs1990_data <- read_excel('data/us90co.xls')
+usgs1995_data <- read_excel('data/usco1995.xlsx')
+usgs2000_data <- read_excel('data/usco2000.xls')
+usgs2005_data <- read_excel('data/usco2005.xls')
+usgs2010_data <- read_excel('data/usco2010.xlsx')
+usgs2015_data <- read_excel('data/usco2015v2.0.xlsx')
+
+usgs2000_data[usgs2000_data=="" | is.na(usgs2000_data) | usgs2000_data=="--"] <- 0
+usgs2005_data[usgs2005_data=="" | is.na(usgs2005_data) | usgs2005_data=="--"] <- 0
+usgs1995_data[usgs1995_data=="" | is.na(usgs1995_data) | usgs1995_data=="--"] <- 0
+usgs2015_data[usgs2015_data=="" | is.na(usgs2015_data) | usgs2015_data=="--"] <- 0
+usgs2010_data[usgs2010_data=="" | is.na(usgs2010_data) | usgs2010_data=="--"] <- 0
+usgs1990_data[usgs1990_data=="" | is.na(usgs1990_data) | usgs1990_data=="--"] <- 0
+
+
+split1990 <- split(usgs1990_data, usgs1990_data$state)
+split1995 <- split(usgs1995_data, usgs1995_data$State)
+split2000 <- split(usgs2000_data, usgs2000_data$STATE)
+split2005 <- split(usgs2005_data, usgs2005_data$STATE)
+split2010 <- split(usgs2010_data, usgs2010_data$STATE)
+split2015 <- split(usgs2015_data, usgs2015_data$STATE)
+
+fix(usgs2015_data)
 water <- read_xlsx("C:/Users/Peter/Downloads/US-TotW-ByState.xlsx")
-water
+water$roundNum <- round(water$State,2)
 
 usa <- getData("GADM", country="USA", level=1) 
-usa$Data <- water$State
+usa$Data <- water$roundNum
 
-pal <- colorQuantile("Reds", NULL, n = 5)
-pallette <- colorQuantile("Reds", NULL, n = 5)
+pal <- colorQuantile("Reds", NULL, n = 12)
+pallette <- colorQuantile("Reds", NULL, n = 12)
 
+
+totalUsageH <- data.frame(
+  usage = c(1189.38,1012.43,446.65,252.31, 258.07),
+  year = c("1990","1995", "2005", "2010", "2015")
+)
+
+
+noNA <- function(x) { x[is.na(x)] <- 0; x }
+
+
+
+split1990 <- noNA(split1990)
+
+sum(split1990$CA$`to-frtot`)
+
+
+total <- function(data, state, col){
+  new <- data[[state]]
+  return(sum(new[[col]]))
+}
+
+
+cal1990<-total(split1990, "CA", "to-frtot")
+
+cal1995 <- total(split1995, "CA", "TO-WFrTo")
+
+cal2000<-total(split2000, "CA", "TO-WFrTo")
+
+cal2005<-sum(split2005$CA$`TO-WFrTo`)
+
+cal2010<-total(split2010, "CA", "TO-WFrTo")
+
+cal2015<-total(split2015, "CA", "TO-WFrTo")
+
+
+totalUsageCAL <- data.frame(
+  usage = c(cal1990,cal1995,cal2000,cal2005,cal2010, cal2015),
+  year = c("1990","1995", "2000","2005", "2010", "2015")
+)
+
+
+
+OR1990<-total(split1990, "OR", "to-frtot")
+
+OR1995 <- total(split1995, "OR", "TO-WFrTo")
+
+#OR2000<-total(split2000, "OR", "TO-WFrTo")
+
+OR2005 <- total(split2005, "OR", "TO-WFrTo")
+
+OR2010<-total(split2010, "OR", "TO-WFrTo")
+
+OR2015<-total(split2015, "OR", "TO-WFrTo")
+
+totalUsageOR <- data.frame(
+  usage = c(OR1990,OR1995,OR2005,OR2010, OR2015),
+  year = c("1990","1995", "2005", "2010", "2015")
+)
+
+
+
+
+ggplot(totalUsageH, aes(x = as.numeric(year), y = usage))+
+  geom_line(size = 2) +
+  geom_smooth(method='lm', formula= y~x)+
+  theme_bw()
 
 #create a pop up (onClick)
 polygon_popup <- paste0("<strong>State: </strong>", usa$NAME_1, "<br>",
@@ -30,16 +120,26 @@ ui = fillPage(
       selectInput("state", "Learn about a specific state:",
                   c("California" = "cal", "Oregon" = "or", "Hawaii"=
                       "ha"), width ="50%"),
-      sliderInput("wrp", "Some water stuff:",
-                  min = 1, max = 100, value = 40, width = "170%"),
       checkboxInput("legend", "Show legend", TRUE)
     )
 )
+data = totalUsageCAL
 server <- function(input, output, session) {
   output$drought<-renderPlot({
-    wow <- ggplot(data = cars, aes(x = speed, dist))+
-      geom_line(color = "#69b3a2", alpha = .9)
-    wow
+    if(input$state == "ha"){
+      data = totalUsageH
+    }
+    if(input$state == "or"){
+      data = totalUsageOR
+    }
+    if(input$state == "cal"){
+      data = totalUsageCAL
+    }
+    else{}
+    ggplot(data, aes(x = as.numeric(year), y = usage))+
+      geom_line(size = 2) +
+      geom_smooth(method='lm', formula= y~x)+
+      theme_bw()
     
   })
   output$USA <-renderLeaflet({
@@ -61,7 +161,7 @@ server <- function(input, output, session) {
     # enabled, create a new one.
     proxy %>% clearControls()
     if (input$legend) {
-      pal <- colorQuantile("Reds", NULL, n = 5)
+      pal <- colorQuantile("Reds", NULL, n = 12)
       proxy %>% addLegend(position = "bottomleft",
                           pal = pal, values = ~usa$Data,
                           title = "Water Usage",
@@ -70,6 +170,10 @@ server <- function(input, output, session) {
   })
 }
 shinyApp(ui, server)
+
+
+
+
 
 
 
