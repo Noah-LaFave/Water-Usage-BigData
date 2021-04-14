@@ -30,7 +30,7 @@ split2005 <- split(usgs2005_data, usgs2005_data$STATE)
 split2010 <- split(usgs2010_data, usgs2010_data$STATE)
 split2015 <- split(usgs2015_data, usgs2015_data$STATE)
 
-water <- read_xlsx("C:/Users/Peter/Downloads/US-TotW-ByState.xlsx")
+water <- read_xlsx("US-TotW-ByState.xlsx")
 water$roundNum <- round(water$State,2)
 
 usa <- getData("GADM", country="USA", level=1) 
