@@ -15,13 +15,13 @@ usgs2005_data <- read_excel('data/usco2005.xls')
 usgs2010_data <- read_excel('data/usco2010.xlsx')
 usgs2015_data <- read_excel('data/usco2015v2.0.xlsx')
 
+#Fix data, as of now turn NA, --, null to 0
+usgs1990_data[usgs1990_data=="" | usgs1990_data=="--"] <- 0
+usgs1995_data[usgs1995_data=="" | is.na(usgs1995_data) | usgs1995_data=="--"] <- 0
 usgs2000_data[usgs2000_data=="" | is.na(usgs2000_data) | usgs2000_data=="--"] <- 0
 usgs2005_data[usgs2005_data=="" | is.na(usgs2005_data) | usgs2005_data=="--"] <- 0
-usgs1995_data[usgs1995_data=="" | is.na(usgs1995_data) | usgs1995_data=="--"] <- 0
-usgs2015_data[usgs2015_data=="" | is.na(usgs2015_data) | usgs2015_data=="--"] <- 0
 usgs2010_data[usgs2010_data=="" | is.na(usgs2010_data) | usgs2010_data=="--"] <- 0
-usgs1990_data[usgs1990_data=="" | is.na(usgs1990_data) | usgs1990_data=="--"] <- 0
-
+usgs2015_data[usgs2015_data=="" | is.na(usgs2015_data) ] <- 0 #error
 
 split1990 <- split(usgs1990_data, usgs1990_data$state)
 split1995 <- split(usgs1995_data, usgs1995_data$State)
