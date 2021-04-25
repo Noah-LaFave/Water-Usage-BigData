@@ -45,8 +45,6 @@ totalUsageH <- data.frame(
   year = c("1990","1995", "2005", "2010", "2015")
 )
 
-
-
 total <- function(data, state, col){
   new <- data[[state]]
   return(sum(new[[col]]))
