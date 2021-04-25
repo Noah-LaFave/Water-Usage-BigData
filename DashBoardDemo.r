@@ -78,7 +78,7 @@ for (state in stateAbbr) {
   var <- returndF(state)
   USAData[nrow(USAData)+1, ] <- c(state, var$usage)
 }
-
+# note
 
 
 cal1990<-total(split1990, "CA", "to-frtot")
