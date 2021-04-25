@@ -64,8 +64,6 @@ returndF <- function(state){
 }
 cal <- returndF("CA")
 
-dataYears <- c("1990","1995","2000", "2005", "2010", "2015")
-
 USAData <- data.frame(matrix(ncol=7, nrow=0))
 x <- c("state", "1990", "1995", "2000", "2005", "2010", "2015")
 colnames(USAData) <- x
