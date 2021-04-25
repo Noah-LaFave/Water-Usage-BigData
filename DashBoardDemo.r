@@ -33,27 +33,29 @@ split2015 <- split(usgs2015_data, usgs2015_data$STATE)
 
 sum(split2015$CA$`TP-TotPop`) #per 1000
 
-
 usa <- getData("GADM", country="USA", level=1) 
 
+#Data frame that will hold the total water usage for a state and the given year
 USAData <- data.frame(matrix(ncol=7, nrow=0))
-x <- c("state", "1990", "1995", "2000", "2005", "2010", "2015")
-colnames(USAData) <- x
+x <- c("state", "1990", "1995", "2000", "2005", "2010", "2015") #headers
+colnames(USAData) <- x #add the headers to the data frame USAData
 
+#State abbreviations including DC
 stateAbbr <- c("AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "HI",
                "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA",
                "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY",
                "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN",
                "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY")
 
+#function that adds up the entire column given a data set and state
 total <- function(data, state, col){
   new <- data[[state]]
   return(sum(new[[col]]))
 }
 
-
+#data frame we want to return that has usage and corresponding year (per 1000 ppl)
 returndF <- function(state){
-  
+  #Dividing the total water usage by the total population to make it more meaningful.
   var<-data.frame(
     usage = c(total(split1990, state, "to-frtot") / total(split1990, state, "po-total"),
               total(split1995, state, "TO-WFrTo") / total(split1995, state, "TotalPop"),
@@ -66,6 +68,9 @@ returndF <- function(state){
   var$usage <- round(var$usage, 3)
   return(var)
 }
+
+
+# test function of the one above
 returndD <- function(state){
   
   var<-data.frame(
@@ -81,23 +86,18 @@ returndD <- function(state){
   return(var)
 }
 
+#loops through each state, get's the amount of water usage for a given year,
+# and adds it to another data frame
 for (state in stateAbbr) {
   var <- returndF(state)
   USAData[nrow(USAData)+1, ] <- c(state, var$usage)
-  
 }
 
 water <- 0
 usa$Data <- 0
 
-pal <- colorQuantile("Blues", NULL, n = 8)
-pallette <- colorQuantile("Blues", NULL, n = 8)
-
-
-
-cal <- returndF("CA")
-cal
-
+pal <- colorQuantile("Blues", NULL, n = 9)
+pallette <- colorQuantile("Blues", NULL, n = 9)
 tot90 <-sum(usgs1990_data$`to-frtot`)
 tot95 <- sum(usgs1995_data$`TO-WFrTo`)#temp_tot00 <- sum(usgs2000_data$`TO-WFrTo`)
 tot05 <- sum(usgs2005_data$`TO-WFrTo`)
@@ -180,7 +180,7 @@ ui = dashboardPage(
     )
   )
 )
-data = totalUsageCAL
+#data = totalUsageCAL
 server <- function(input, output, session) {
   output$drought<-renderPlot({
     title <- paste("Total Usage Per 1000 People in ", input$state, sep="")
@@ -220,6 +220,7 @@ server <- function(input, output, session) {
                   weight = 2, #of black edges
                   color = "black",
                   popup = polygon_popup)  #from library 
+    #addLegend(USA, "bottomleft", pal = pallette, values = 0:20)
   })
 }
 shinyApp(ui, server)
