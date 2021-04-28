@@ -217,7 +217,7 @@ server <- function(input, output, session) {
       theme(axis.text = element_text(size = 12),
             axis.title=element_text(size=14,face="bold"),
             legend.text = element_text(size = 15))+
-      xlab("Years")+ ylab("Millions Of Gallons") + labs(title = title)+
+      xlab("Years")+ ylab("Millions Of Gallons/d") + labs(title = title)+
       scale_color_manual("Legend", values = c("black", "red")) 
     
   })
