@@ -96,8 +96,8 @@ for (state in stateAbbr) {
 water <- 0
 usa$Data <- 0
 
-pal <- colorQuantile("Blues", NULL, n = 9)
-pallette <- colorQuantile("Blues", NULL, n = 9)
+pal <- colorNumeric("Blues", NULL)
+pallette <- colorQuantile("Blues", NULL, n = 5)
 tot90 <-sum(usgs1990_data$`to-frtot`)
 tot95 <- sum(usgs1995_data$`TO-WFrTo`)#temp_tot00 <- sum(usgs2000_data$`TO-WFrTo`)
 tot05 <- sum(usgs2005_data$`TO-WFrTo`)
@@ -154,7 +154,9 @@ ui = dashboardPage(
         box(title = strong("United States Map"), status = "success", solidHeader = TRUE,
             leafletOutput("USA"),
             selectInput("year", "Pick a Year: ", c("1990", "1995", "2005",
-                                                   "2010", "2015"))),
+                                                   "2010", "2015")),
+            checkboxInput("checkbox", label = "Show Legend", value = TRUE),
+            ),
         box(title = strong("Drought Levels"), status = 'primary', solidHeader = TRUE,
             plotOutput(outputId = "drought"),
             p(),
@@ -189,7 +191,7 @@ server <- function(input, output, session) {
       data <- all
       title <- "Total Water Usage in the US"
     }
-    
+
     print(data)
     ggplot(data, aes(x = as.numeric(year), y = usage))+
       geom_point(size = 4, color = "black")+ 
@@ -215,12 +217,17 @@ server <- function(input, output, session) {
       setView(-98.5795, 39.8283,
               zoom = 4) %>% 
       addPolygons(data = usa, 
-                  fillColor= ~pal(Data), #the larger the number, more red it is 
+                  fillColor= ~pal(Data), #the larger the number, more blue it is 
                   fillOpacity = 0.7, 
-                  weight = 2, #of black edges
+                  weight = 1, #of black edges
                   color = "black",
-                  popup = polygon_popup)  #from library 
-    #addLegend(USA, "bottomleft", pal = pallette, values = 0:20)
+                  popup = polygon_popup)  #from library
+    
+    #need to add boolean around this
+    addLegend(USA, "bottomleft", pal = pal, values = usa$Data, title = "Millions of Gallons Per 1000 People")
+    
+    
+    
   })
 }
 shinyApp(ui, server)
